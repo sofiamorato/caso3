@@ -1,3 +1,56 @@
-public class ManejadorDeCuarentena {
-    
+import java.util.ArrayList;
+
+public class ManejadorDeCuarentena extends Thread {
+
+    private final BuzonDeCuarentena cuarentena;
+    private final BuzonDeEntrega entrega;
+    private boolean activo = true;
+
+    public ManejadorDeCuarentena(BuzonDeCuarentena cuarentena, BuzonDeEntrega entrega) {
+        this.cuarentena = cuarentena;
+        this.entrega = entrega;
+    }
+
+    @Override
+    public void run() {
+        while (activo) {
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+
+            ArrayList<Mensaje> mensajesRevisados = cuarentena.revisionMensajes();
+
+            for (int i = 0; i < mensajesRevisados.size(); i++) {
+                Mensaje mensaje = mensajesRevisados.get(i);
+
+                if (mensaje.getTiempoCuarentena() > 0) {
+                    int tiempo = mensaje.getTiempoCuarentena();
+                    mensaje.setTiempoCuarentena(tiempo - 1);
+                    System.out.println("[Cuarentena] Mensaje " + mensaje.getId() + " en cuarentena, tiempo restante: "
+                            + mensaje.getTiempoCuarentena());
+                }
+
+                else if (mensaje.getTiempoCuarentena() == 0) {
+                    cuarentena.eliminarMensaje(mensaje);
+
+                    if (mensaje.getTipo().equals("FIN")) {
+                        System.out.println("[Manejador] Mensaje FIN recibido. Terminando ejecución.");
+                        activo = false;
+                    } else {
+                        int random = 1 + (int) (Math.random() * 21);
+                        if (random % 7 != 0) {
+                            entrega.enviarMensaje(mensaje);
+                            System.out.println(
+                                    "[Manejador] Mensaje " + mensaje.getId() + " reenviado al Buzón de Entrega.");
+                        } else {
+                            System.out.println("[Manejador] Mensaje " + mensaje.getId() + " descartado por malicioso.");
+
+                        }
+                    }
+                }
+            }
+        }
+    }
 }
