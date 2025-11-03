@@ -3,37 +3,29 @@ public class Fin {
     private final int totalClientes;
     private boolean finEntregado = false;
 
-    private final BuzonDeEntrada buzon;
-    private final BuzonDeCuarentena cuarentena;
-    private final BuzonDeEntrega entrega;
-
-    public Fin(int totalClientes,
-                        BuzonDeEntrada buzon,
-                        BuzonDeCuarentena cuarentena,
-                        BuzonDeEntrega entrega) {
+    public Fin(int totalClientes) {
         this.totalClientes = totalClientes;
-        this.buzon = buzon;
-        this.cuarentena = cuarentena;
-        this.entrega = entrega;
     }
 
     public synchronized void registrarFinCliente(Mensaje mensaje) {
         finRecibidos++;
-        entrega.enviarMensaje(mensaje);
-        System.out.println("[EstadoGlobal] FIN recibido: " + mensaje.getId() +
+        System.out.println("[Fin] FIN recibido: " + mensaje.getId() +
                 " (" + finRecibidos + "/" + totalClientes + ")");
+    }
 
-        if (finRecibidos == totalClientes && buzon.estaVacio() && cuarentena.estaVacia() && !finEntregado) {
-            entrega.enviarMensaje(Mensaje.fin(-1));
-            cuarentena.enviarMensaje(Mensaje.fin(-1));
+    public synchronized boolean todosFinalizados() {
+        return finRecibidos >= totalClientes;
+    }
+
+    public synchronized boolean finYaEnviado() {
+        return finEntregado;
+    }
+
+    public synchronized boolean marcarFinGlobalEnviadoSiNoLoEsta() {
+        if (!finEntregado) {
             finEntregado = true;
-            System.out.println("[EstadoGlobal] >>> FIN GLOBAL enviado a Entrega y Cuarentena <<<");
-            notifyAll();
+            return true;
         }
+        return false;
     }
-
-    public synchronized boolean debeFinalizarFiltro() {
-        return finEntregado && buzon.estaVacio();
-    }
-
 }

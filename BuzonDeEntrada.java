@@ -15,7 +15,7 @@ public class BuzonDeEntrada {
     public synchronized void enviarMensaje(Mensaje mensaje) {
         while (contador == capacidad) {
             try {
-                System.out.println("[Buzon] Lleno. Cliente con mensaje " + mensaje.getId() + " está esperando. Mensajes actuales: " + contador + "/" + capacidad);
+                System.out.println("[Buzon Entrada] Lleno. Cliente con mensaje " + mensaje.getId() + " está esperando. Mensajes actuales: " + contador + "/" + capacidad + mensaje);
                 wait();
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
@@ -30,14 +30,14 @@ public class BuzonDeEntrada {
         envioIndex++;
         contador++;
 
-        System.out.println("[Buzon] El mensaje: " + mensaje.getId() + " ha sido enviado al Buzon de Entrada.");
+        System.out.println("[Buzon Entrada] El mensaje: " + mensaje.getId() + " ha sido enviado al Buzon de Entrada." + mensaje + contador);
         notifyAll();
     }
 
     public synchronized Mensaje extraerMensaje() {
     while (contador == 0) {
         try {
-            System.out.println("[Buzon] Vacío. Filtro espera mensaje...");
+            System.out.println("[Buzon Entrada] Vacío. Filtro espera mensaje...");
             wait();
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
@@ -51,7 +51,7 @@ public class BuzonDeEntrada {
     }
     contador--;
 
-    System.out.println("[Buzon] El mensaje " + mensaje.getId() + " ha sido extraído por el FiltroDeSpam.");
+    System.out.println("[Buzon Entrada] El mensaje " + mensaje.getId() + " ha sido extraído por el FiltroDeSpam." + mensaje + contador);
     notifyAll();
 
     return mensaje;

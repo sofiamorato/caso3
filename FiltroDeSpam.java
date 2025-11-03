@@ -17,24 +17,44 @@ public class FiltroDeSpam extends Thread {
         while (activo) {
             Mensaje mensaje = buzon.extraerMensaje();
 
-            if (mensaje.getTipo().equals("INICIO")) {
-            entrega.enviarMensaje(mensaje);
-            System.out.println("[Filtro] Mensaje de control (" + mensaje.getTipo() + "): " + mensaje.getId() + " → enviado al Servidor de Entrega");
-        }
-            else if (mensaje.getTipo().equals("NORMAL")) {
-                if (mensaje.esSpam()) {
-                    cuarentena.enviarMensaje(mensaje);
-                    System.out.println("[Filtro] SPAM detectado: " + mensaje.getId() + " → enviado al Manejador de Cuarentena");
-                } else {
+            switch (mensaje.getTipo()) {
+                case "INICIO":
                     entrega.enviarMensaje(mensaje);
-                    System.out.println("[Filtro] Mensaje limpio: " + mensaje.getId() + " → enviado al Servidor de Entrega");
+                    System.out.println("[Filtro] Mensaje INICIO " + mensaje.getId() + " → enviado al Servidor de Entrega");
+                    break;
+
+                case "NORMAL":
+                    if (mensaje.esSpam()) {
+                        cuarentena.enviarMensaje(mensaje);
+                        System.out.println("[Filtro] SPAM detectado: " + mensaje.getId() + " → enviado a Cuarentena");
+                    } else {
+                        entrega.enviarMensaje(mensaje);
+                        System.out.println("[Filtro] Mensaje limpio: " + mensaje.getId() + " → enviado a Entrega");
+                    }
+                    break;
+
+                case "FIN":
+                    fin.registrarFinCliente(mensaje);
+                    break;
+            }
+
+            if (fin.todosFinalizados() && buzon.estaVacio() && cuarentena.estaVacia() && !fin.finYaEnviado()) {
+                if (fin.marcarFinGlobalEnviadoSiNoLoEsta()) {
+                    entrega.enviarMensaje(Mensaje.fin(-1));
+                    cuarentena.enviarMensaje(Mensaje.fin(-1));
+                    System.out.println("[Filtro] >>> FIN GLOBAL enviado a Entrega y Cuarentena <<<");
                 }
-            } else if (mensaje.getTipo().equals("FIN")) {
-                fin.registrarFinCliente(mensaje);
-                if (fin.debeFinalizarFiltro()) {
-                    System.out.println("[Filtro] Condiciones de cierre cumplidas → Finalizando hilo");
-                    activo = false;
-                }
+            }
+
+            if (fin.finYaEnviado() && buzon.estaVacio() && cuarentena.estaVacia()) {
+                System.out.println("[Filtro] Condiciones de cierre cumplidas → Finalizando hilo");
+                activo = false;
+            }
+
+            try {
+                Thread.sleep(500);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
             }
         }
     }

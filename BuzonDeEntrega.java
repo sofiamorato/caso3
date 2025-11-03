@@ -14,47 +14,79 @@ public class BuzonDeEntrega {
         this.servidoresTotales = servidoresTotales;
     }
 
-    public synchronized void enviarMensaje(Mensaje mensaje) {
-        while (contador == capacidad) {
-            try {
-                System.out.println("[Buzon] Lleno. Servidor de Entrega con mensaje " + mensaje.getId() + " está esperando. Mensajes actuales: " + contador + "/" + capacidad);
-                Thread.sleep(50);
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
+    public void enviarMensaje(Mensaje mensaje) {
+        boolean enviado = false;
+        while (!enviado) {
+            synchronized (this) {
+                if (contador < capacidad) {
+
+                    if (envioIndex == capacidad) {
+                        envioIndex = 0;
+                    }
+
+                    mensajes[envioIndex] = mensaje;
+                    envioIndex++;
+                    contador++;
+                    System.out.println(
+                            "[Buzon Entrega] El mensaje: " + mensaje.getId() + " ha sido enviado al Buzon de Entrega.");
+                    notifyAll();
+                    enviado = true;
+
+                } else {
+                    System.out.println("[Buzon Entrega] Lleno. Mensaje " + mensaje.getId() +
+                            " espera. Ocupado: " + contador + "/" + capacidad);
+                }
+            }
+
+            if (!enviado) {
+                try {
+                    Thread.sleep(500); // espera semiactiva
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                }
             }
         }
-        if(envioIndex == capacidad) {
-            envioIndex = 0;
-        }
-
-        mensajes[envioIndex] = mensaje;
-        envioIndex++;
-        contador++;
-        System.out.println("[Buzon] El mensaje: " + mensaje.getId() + " ha sido enviado al Buzon de Entrega.");
-        notifyAll();
     }
 
+    public Mensaje extraerMensaje() {
+        Mensaje mensaje = null;
+        boolean extraido = false;
 
-    public synchronized Mensaje extraerMensaje() {
-        while (contador == 0) {
-            System.out.println("[Buzon] Vacío. Servidor de Entrega espera mensaje...");
-            Thread.yield();
-        }
+        while (!extraido) {
+            synchronized (this) {
+                if (contador > 0) {
+                    mensaje = mensajes[extraerIndex];
+                    extraerIndex++;
+                    if (extraerIndex == capacidad) {
+                        extraerIndex = 0;
+                    }
+                    contador--;
+                    System.out.println(
+                            "[Buzon Entrega] El mensaje " + mensaje.getId()
+                                    + " ha sido extraído por el Servidor de Entrega.");
+                    notifyAll();
 
-        Mensaje mensaje = mensajes[extraerIndex];
-        extraerIndex++;
-        if (extraerIndex == capacidad) {
-            extraerIndex = 0;
-        }
-        contador--;
-        System.out.println("[Buzon] El mensaje " + mensaje.getId() + " ha sido extraído por el Servidor de Entrega.");
-        notifyAll();
+                    if (mensaje.getTipo().equals("FIN") && mensaje.getId() == -1 && !finInsertado) {
+                        finInsertado = true;
+                        for (int i = 1; i < servidoresTotales; i++) {
+                            enviarMensaje(Mensaje.fin(-1));
+                        }
+                        System.out.println("[Buzon Entrega] FIN global duplicado para todos los servidores (" 
+                                + servidoresTotales + ")");
+                    }
 
-        if (mensaje.getTipo().equals("FIN") && !finInsertado) {
-            finInsertado = true;
-            for (int i = 1; i < servidoresTotales; i++) {
-                Mensaje email = Mensaje.fin(-1);
-                enviarMensaje(email);
+                    extraido = true;
+                } else {
+                    System.out.println("[Buzon Entrega] Vacío. Servidor de Entrega espera mensaje...");
+                }
+            }
+
+            if (!extraido) {
+                try {
+                    Thread.sleep(500);
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                }
             }
         }
 

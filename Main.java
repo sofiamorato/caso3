@@ -27,20 +27,20 @@ public class Main {
         BuzonDeEntrada buzonEntrada = new BuzonDeEntrada(capacidadEntrada);
         BuzonDeEntrega buzonEntrega = new BuzonDeEntrega(capacidadEntrega, numServidores);
         BuzonDeCuarentena buzonCuarentena = new BuzonDeCuarentena();
-        Fin fin = new Fin(numClientes, buzonEntrada, buzonCuarentena, buzonEntrega);
+        Fin fin = new Fin(numClientes);
 
         for (int i = 0; i < numClientes; i++) {
-            new Thread(new ClientesEmisores(buzonEntrada, mensajesPorCliente, i)).start();
+            new ClientesEmisores(buzonEntrada, i, mensajesPorCliente).start();
         }
 
         for (int i = 0; i < numFiltros; i++) {
-            new Thread(new FiltroDeSpam(buzonEntrada, buzonCuarentena, buzonEntrega, fin)).start();
+            new FiltroDeSpam(buzonEntrada, buzonCuarentena, buzonEntrega, fin).start();
         }
 
-        new Thread(new ManejadorDeCuarentena(buzonCuarentena, buzonEntrega)).start();
+        new ManejadorDeCuarentena(buzonCuarentena, buzonEntrega).start();
 
         for (int i = 0; i < numServidores; i++) {
-            new Thread(new ServidorDeEntrega(i, buzonEntrega)).start();
+            new ServidorDeEntrega(i, buzonEntrega).start();
         }
     }
 }

@@ -26,20 +26,24 @@ public class ServidorDeEntrega extends Thread {
                     System.out.println("[Servidor " + idServidor + "] FIN recibido. Terminando ejecución.");
                     activo = false;
                 } else {
-                    if (mensaje.getTipo().equals("NORMAL") && !iniciado) {
-                        System.out.println("[Servidor " + idServidor + "] Procesando mensaje: " + mensaje);
-                        try {
-                            int tiempo = (int) (500 + Math.random() * 1000);
-                            Thread.sleep(tiempo);
-                        } catch (InterruptedException e) {
-                            Thread.currentThread().interrupt();
-                            activo = false;
+                    if (mensaje.getTipo().equals("NORMAL")) {
+                        if (iniciado) {
+                            System.out.println("[Servidor " + idServidor + "] Procesando mensaje: " + mensaje);
+                            try {
+                                int tiempo = (int) (500 + Math.random() * 1000);
+                                Thread.sleep(tiempo);
+                            } catch (InterruptedException e) {
+                                Thread.currentThread().interrupt();
+                                activo = false;
+                            }
+                        } else {
+                            System.out.println(
+                                    "[Servidor " + idServidor + "] Ignora mensaje normal hasta recibir INICIO.");
                         }
                     }
                 }
             }
         }
-
         System.out.println("[Servidor " + idServidor + "] Finalizado.");
     }
 }
