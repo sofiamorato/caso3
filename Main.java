@@ -9,7 +9,6 @@ public class Main {
             System.exit(1);
         }
 
-        // Leer configuración
         String archivoConfig = args[0];
         int numClientes = 0, mensajesPorCliente = 0, numFiltros = 0, numServidores = 0, capacidadEntrada = 0, capacidadEntrega = 0;
 
