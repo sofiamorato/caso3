@@ -51,6 +51,7 @@ public class BuzonDeEntrega {
     public Mensaje extraerMensaje() {
         Mensaje mensaje = null;
         boolean extraido = false;
+        int duplicadosPendientes = 0; // duplicaciones de FIN a realizar fuera del bloqueo
 
         while (!extraido) {
             synchronized (this) {
@@ -65,14 +66,10 @@ public class BuzonDeEntrega {
                             "[Buzon Entrega] El mensaje " + mensaje.getId()
                                     + " ha sido extraído por el Servidor de Entrega.");
                     notifyAll();
-                    // Manejo especial para el FIN global
+                    // Marcar duplicaciones pendientes de FIN global sin enviar dentro del bloqueo
                     if (mensaje.getTipo().equals("FIN") && mensaje.getId() == -1 && !finInsertado) {
                         finInsertado = true;
-                        for (int i = 1; i < servidoresTotales; i++) {
-                            enviarMensaje(Mensaje.fin(-1));
-                        }
-                        System.out.println("[Buzon Entrega] FIN global duplicado para todos los servidores (" 
-                                + servidoresTotales + ")");
+                        duplicadosPendientes = Math.max(servidoresTotales - 1, 0);
                     }
 
                     extraido = true;
@@ -88,6 +85,15 @@ public class BuzonDeEntrega {
                     Thread.currentThread().interrupt();
                 }
             }
+        }
+
+        // Realizar duplicaciones fuera de la sección crítica para evitar bloqueos reentrantes
+        if (duplicadosPendientes > 0) {
+            for (int i = 0; i < duplicadosPendientes; i++) {
+                enviarMensaje(Mensaje.fin(-1));
+            }
+            System.out.println("[Buzon Entrega] FIN global duplicado para todos los servidores (" 
+                    + servidoresTotales + ")");
         }
 
         return mensaje;

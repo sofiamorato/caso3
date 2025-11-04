@@ -15,12 +15,12 @@ public class FiltroDeSpam extends Thread {
     @Override
     public void run() {
         while (activo) {
-            // Verificación proactiva antes de intentar bloquearse esperando mensajes:
+            // Verificación antes de intentar bloquearse esperando mensajes:
             if (fin.todosFinalizados() && buzon.estaVacio() && cuarentena.estaVacia() && !fin.finYaEnviado()) {
                 if (fin.marcarFinGlobalEnviadoSiNoLoEsta()) {
                     entrega.enviarMensaje(Mensaje.fin(-1));
                     cuarentena.enviarMensaje(Mensaje.fin(-1));
-                    System.out.println("[Filtro] >>> FIN GLOBAL enviado a Entrega y Cuarentena (proactivo)");
+                    System.out.println("[Filtro] >>> FIN GLOBAL enviado a Entrega y Cuarentena ");
                 }
             }
 
@@ -35,7 +35,7 @@ public class FiltroDeSpam extends Thread {
             // Intento de extracción con timeout para no quedar bloqueado indefinidamente
             Mensaje mensaje = buzon.extraerMensajeConEspera(500);
             if (mensaje == null) {
-                // No hubo mensaje en el intervalo; reintenta ciclo tras las verificaciones proactivas
+                // No hubo mensaje en el intervalo; reintenta ciclo tras las verificaciones
                 continue;
             }
             // Procesamiento del mensaje extraído
@@ -59,7 +59,7 @@ public class FiltroDeSpam extends Thread {
                     fin.registrarFinCliente(mensaje);
                     break;
             }
-            // Verificación proactiva después de procesar el mensaje:
+            // Verificación después de procesar el mensaje:
             if (fin.todosFinalizados() && buzon.estaVacio() && cuarentena.estaVacia() && !fin.finYaEnviado()) {
                 if (fin.marcarFinGlobalEnviadoSiNoLoEsta()) {
                     entrega.enviarMensaje(Mensaje.fin(-1));
