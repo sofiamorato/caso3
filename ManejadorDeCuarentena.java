@@ -27,12 +27,15 @@ public class ManejadorDeCuarentena extends Thread {
 
                 if (mensaje.getTiempoCuarentena() > 0) {
                     int tiempo = mensaje.getTiempoCuarentena();
-                    mensaje.setTiempoCuarentena(tiempo - 1);
+                    // Decremento en milisegundos, con tick de 1000ms
+                    int nuevoTiempo = tiempo - 1000;
+                    if (nuevoTiempo < 0) nuevoTiempo = 0;
+                    mensaje.setTiempoCuarentena(nuevoTiempo);
                     System.out.println("[Cuarentena] Mensaje " + mensaje.getId() + " en cuarentena, tiempo restante: "
-                            + mensaje.getTiempoCuarentena());
+                            + mensaje.getTiempoCuarentena() + " ms");
                 }
-                // Si el tiempo de cuarentena es negativo, se elimina el mensaje
-                else if (mensaje.getTiempoCuarentena() == 0) {
+                // Si el tiempo de cuarentena llegó a 0, se elimina el mensaje
+                else if (mensaje.getTiempoCuarentena() <= 0) {
                     cuarentena.eliminarMensaje(mensaje);
                     // Procesa el mensaje según su tipo
                     if (mensaje.getTipo().equals("FIN")) {

@@ -1,5 +1,7 @@
-Para correr
+Para correr en terminal
 
-config.txt = nombre del archivo_config
+javac *.java  
+
+(config.txt = nombre del archivo_config)
 
 java Main config.txt

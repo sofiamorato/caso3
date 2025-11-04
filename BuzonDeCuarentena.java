@@ -9,10 +9,11 @@ public class BuzonDeCuarentena {
     }
     // Agrega un mensaje al buzón de cuarentena con un tiempo aleatorio asignado
     public synchronized void enviarMensaje(Mensaje mensaje) {
-        int tiempo = (int) (Math.random() * 10);
+        // Tiempo en milisegundos entre 10.000 y 20.000 según enunciado
+        int tiempo = 10000 + (int) (Math.random() * 10000);
         mensaje.setTiempoCuarentena(tiempo);
         mensajes.add(mensaje);
-        System.out.println("[Cuarentena] Mensaje SPAM recibido: " + mensaje.getId() + ", tiempo asignado: " + tiempo);
+        System.out.println("[Cuarentena] Mensaje SPAM recibido: " + mensaje.getId() + ", tiempo asignado: " + tiempo + " ms");
     }
     // Revisa y devuelve una copia de los mensajes en cuarentena
     public synchronized ArrayList<Mensaje> revisionMensajes() {
