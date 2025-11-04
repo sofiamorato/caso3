@@ -13,7 +13,7 @@ public class BuzonDeEntrega {
         this.mensajes = new Mensaje[capacidad];
         this.servidoresTotales = servidoresTotales;
     }
-
+    // Método para enviar un mensaje al buzón de entrega
     public void enviarMensaje(Mensaje mensaje) {
         boolean enviado = false;
         while (!enviado) {
@@ -37,7 +37,7 @@ public class BuzonDeEntrega {
                             " espera. Ocupado: " + contador + "/" + capacidad);
                 }
             }
-
+            // Espera semiactiva si no se pudo enviar
             if (!enviado) {
                 try {
                     Thread.sleep(500); // espera semiactiva
@@ -47,7 +47,7 @@ public class BuzonDeEntrega {
             }
         }
     }
-
+    // Método para extraer un mensaje del buzón de entrega
     public Mensaje extraerMensaje() {
         Mensaje mensaje = null;
         boolean extraido = false;
@@ -65,7 +65,7 @@ public class BuzonDeEntrega {
                             "[Buzon Entrega] El mensaje " + mensaje.getId()
                                     + " ha sido extraído por el Servidor de Entrega.");
                     notifyAll();
-
+                    // Manejo especial para el FIN global
                     if (mensaje.getTipo().equals("FIN") && mensaje.getId() == -1 && !finInsertado) {
                         finInsertado = true;
                         for (int i = 1; i < servidoresTotales; i++) {
@@ -80,7 +80,7 @@ public class BuzonDeEntrega {
                     System.out.println("[Buzon Entrega] Vacío. Servidor de Entrega espera mensaje...");
                 }
             }
-
+            // Espera semiactiva si no se pudo extraer
             if (!extraido) {
                 try {
                     Thread.sleep(500);
@@ -92,7 +92,7 @@ public class BuzonDeEntrega {
 
         return mensaje;
     }
-
+    // Verifica si el buzón de entrega está vacío
     public synchronized boolean estaVacio() {
         return contador == 0;
     }

@@ -1,0 +1,5 @@
+Para correr
+
+config.txt = nombre del archivo_config
+
+java Main config.txt

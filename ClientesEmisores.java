@@ -9,7 +9,7 @@ public class ClientesEmisores extends Thread {
         this.idCliente = idCliente;
         this.cantidadMensajes = cantidadMensajes;
     }
-
+    // Método run para enviar mensajes al buzón de entrada
     @Override
     public void run() {
         Mensaje inicio = Mensaje.inicio(idCliente);

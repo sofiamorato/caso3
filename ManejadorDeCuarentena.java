@@ -10,7 +10,7 @@ public class ManejadorDeCuarentena extends Thread {
         this.cuarentena = cuarentena;
         this.entrega = entrega;
     }
-
+    // Método run para manejar los mensajes en cuarentena
     @Override
     public void run() {
         while (activo) {
@@ -21,7 +21,7 @@ public class ManejadorDeCuarentena extends Thread {
             }
 
             ArrayList<Mensaje> mensajesRevisados = cuarentena.revisionMensajes();
-
+            // Recorre los mensajes en cuarentena
             for (int i = 0; i < mensajesRevisados.size(); i++) {
                 Mensaje mensaje = mensajesRevisados.get(i);
 
@@ -31,10 +31,10 @@ public class ManejadorDeCuarentena extends Thread {
                     System.out.println("[Cuarentena] Mensaje " + mensaje.getId() + " en cuarentena, tiempo restante: "
                             + mensaje.getTiempoCuarentena());
                 }
-
+                // Si el tiempo de cuarentena es negativo, se elimina el mensaje
                 else if (mensaje.getTiempoCuarentena() == 0) {
                     cuarentena.eliminarMensaje(mensaje);
-
+                    // Procesa el mensaje según su tipo
                     if (mensaje.getTipo().equals("FIN")) {
                         System.out.println("[Manejador] Mensaje FIN recibido. Terminando ejecución.");
                         activo = false;

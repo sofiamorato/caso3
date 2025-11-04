@@ -3,19 +3,19 @@ public class ServidorDeEntrega extends Thread {
     private final BuzonDeEntrega buzon;
     private boolean iniciado = false;
     private boolean activo = true;
-
+    
     public ServidorDeEntrega(int idServidor, BuzonDeEntrega buzon) {
         this.idServidor = idServidor;
         this.buzon = buzon;
     }
-
+    // Método run para procesar mensajes del buzón de entrega
     @Override
     public void run() {
         System.out.println("[Servidor " + idServidor + "] Esperando mensaje de INICIO...");
-
+        // Bucle principal del servidor de entrega
         while (activo) {
             Mensaje mensaje = buzon.extraerMensaje();
-
+            // Procesa el mensaje según su tipo
             if (!iniciado) {
                 if (mensaje.getTipo().equals("INICIO")) {
                     iniciado = true;
@@ -25,6 +25,7 @@ public class ServidorDeEntrega extends Thread {
                 if (mensaje.getTipo().equals("FIN")) {
                     System.out.println("[Servidor " + idServidor + "] FIN recibido. Terminando ejecución.");
                     activo = false;
+                    
                 } else {
                     if (mensaje.getTipo().equals("NORMAL")) {
                         if (iniciado) {

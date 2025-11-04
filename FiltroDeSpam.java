@@ -15,8 +15,30 @@ public class FiltroDeSpam extends Thread {
     @Override
     public void run() {
         while (activo) {
-            Mensaje mensaje = buzon.extraerMensaje();
+            // Verificación proactiva antes de intentar bloquearse esperando mensajes:
+            if (fin.todosFinalizados() && buzon.estaVacio() && cuarentena.estaVacia() && !fin.finYaEnviado()) {
+                if (fin.marcarFinGlobalEnviadoSiNoLoEsta()) {
+                    entrega.enviarMensaje(Mensaje.fin(-1));
+                    cuarentena.enviarMensaje(Mensaje.fin(-1));
+                    System.out.println("[Filtro] >>> FIN GLOBAL enviado a Entrega y Cuarentena (proactivo)");
+                }
+            }
 
+            // Cierre de los filtros según enunciado: cuando se recibieron todos los FIN
+            // y ya se entregó FIN a entrega y cuarentena (señalado por finYaEnviado)
+            if (fin.finYaEnviado() && fin.todosFinalizados()) {
+                System.out.println("[Filtro] Finalizando (todos FIN recibidos y FIN global entregado)");
+                activo = false;
+                break;
+            }
+
+            // Intento de extracción con timeout para no quedar bloqueado indefinidamente
+            Mensaje mensaje = buzon.extraerMensajeConEspera(500);
+            if (mensaje == null) {
+                // No hubo mensaje en el intervalo; reintenta ciclo tras las verificaciones proactivas
+                continue;
+            }
+            // Procesamiento del mensaje extraído
             switch (mensaje.getTipo()) {
                 case "INICIO":
                     entrega.enviarMensaje(mensaje);
@@ -37,7 +59,7 @@ public class FiltroDeSpam extends Thread {
                     fin.registrarFinCliente(mensaje);
                     break;
             }
-
+            // Verificación proactiva después de procesar el mensaje:
             if (fin.todosFinalizados() && buzon.estaVacio() && cuarentena.estaVacia() && !fin.finYaEnviado()) {
                 if (fin.marcarFinGlobalEnviadoSiNoLoEsta()) {
                     entrega.enviarMensaje(Mensaje.fin(-1));
@@ -45,12 +67,12 @@ public class FiltroDeSpam extends Thread {
                     System.out.println("[Filtro] >>> FIN GLOBAL enviado a Entrega y Cuarentena <<<");
                 }
             }
-
-            if (fin.finYaEnviado() && buzon.estaVacio() && cuarentena.estaVacia()) {
-                System.out.println("[Filtro] Condiciones de cierre cumplidas → Finalizando hilo");
+            // Cierre de los filtros según enunciado: cuando se recibieron todos los FIN
+            if (fin.finYaEnviado() && fin.todosFinalizados()) {
+                System.out.println("[Filtro] Finalizando (post-proceso): FIN global entregado y todos FIN recibidos");
                 activo = false;
             }
-
+            // Pequeña pausa para evitar un bucle muy rápido
             try {
                 Thread.sleep(500);
             } catch (InterruptedException e) {
